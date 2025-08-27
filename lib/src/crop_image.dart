@@ -1,12 +1,13 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+
 import 'crop_controller.dart';
 import 'crop_grid.dart';
 import 'crop_rect.dart';
 import 'crop_rotation.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 
 /// Widget to crop images.
 ///
@@ -21,8 +22,8 @@ class CropImage extends StatefulWidget {
   /// Otherwise, [aspectRatio] will not be enforced and the [defaultCrop] will be the full image.
   final CropController? controller;
 
-  /// The image to be cropped.
-  final Image image;
+  /// The image widget to be cropped.
+  final Widget image;
 
   /// The crop grid color of the outer lines.
   ///
@@ -154,7 +155,7 @@ class CropImage extends StatefulWidget {
     super.debugFillProperties(properties);
 
     properties.add(DiagnosticsProperty<CropController>('controller', controller, defaultValue: null));
-    properties.add(DiagnosticsProperty<Image>('image', image));
+    properties.add(DiagnosticsProperty<Widget>('image', image));
     properties.add(DiagnosticsProperty<Color>('gridColor', gridColor));
     properties.add(DiagnosticsProperty<Color>('gridInnerColor', gridInnerColor));
     properties.add(DiagnosticsProperty<Color>('gridCornerColor', gridCornerColor));
@@ -198,9 +199,15 @@ class _CropImageState extends State<CropImage> {
     controller.addListener(onChange);
     currentCrop = controller.crop;
 
-    _stream = widget.image.image.resolve(const ImageConfiguration());
-    _streamListener = ImageStreamListener((info, _) => controller.image = info.image);
-    _stream.addListener(_streamListener);
+    if (widget.image is Image) {
+      final imageWidget = widget.image as Image;
+      _stream = imageWidget.image.resolve(const ImageConfiguration());
+      _streamListener = ImageStreamListener((info, _) => controller.image = info.image);
+      _stream.addListener(_streamListener);
+    } else {
+      // For non-Image widgets, we cannot extract the image data
+      // The controller will need to be provided with image data separately
+    }
   }
 
   @override
@@ -211,7 +218,9 @@ class _CropImageState extends State<CropImage> {
       controller.dispose();
     }
 
-    _stream.removeListener(_streamListener);
+    if (widget.image is Image) {
+      _stream.removeListener(_streamListener);
+    }
 
     super.dispose();
   }
@@ -273,12 +282,19 @@ class _CropImageState extends State<CropImage> {
                 SizedBox(
                   width: width,
                   height: height,
-                  child: CustomPaint(
-                    painter: _RotatedImagePainter(
-                      controller.getImage()!,
-                      controller.rotation,
-                    ),
-                  ),
+                  child: widget.image is Image && controller.getImage() != null
+                      ? CustomPaint(
+                          painter: _RotatedImagePainter(
+                            controller.getImage()!,
+                            controller.rotation,
+                          ),
+                        )
+                      : ClipRect(
+                          child: Transform.rotate(
+                            angle: controller.rotation.radians,
+                            child: widget.image,
+                          ),
+                        ),
                 ),
                 if (widget.overlayPainter != null)
                   SizedBox(
