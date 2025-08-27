@@ -240,8 +240,8 @@ class _CropImageState extends State<CropImage> {
     if (controller.getImage() != null) {
       return controller.getImage()!.width / controller.getImage()!.height;
     }
-    // Default ratio for non-Image widgets
-    return maxWidth / maxHeight;
+    // Default ratio for non-Image widgets (1:1 aspect ratio)
+    return 1.0;
   }
 
   double _getWidth(final double maxWidth, final double maxHeight) {
