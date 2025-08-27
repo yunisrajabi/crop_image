@@ -87,9 +87,17 @@ class CropController extends ValueNotifier<CropControllerValue> {
   /// See also:
   ///
   ///  * [crop], which represents the same rectangle in percentage.
-  Rect get cropSize => value.crop.multiply(_bitmapSize);
+  Rect get cropSize {
+    if (_bitmap == null) {
+      return Rect.zero;
+    }
+    return value.crop.multiply(_bitmapSize);
+  }
 
   set cropSize(Rect newCropSize) {
+    if (_bitmap == null) {
+      return;
+    }
     value = value.copyWith(
       crop: _adjustRatio(newCropSize.divide(_bitmapSize), value.aspectRatio),
     );
@@ -142,7 +150,7 @@ class CropController extends ValueNotifier<CropControllerValue> {
     double? aspectRatio, {
     CropRotation? rotation,
   }) {
-    if (aspectRatio == null) {
+    if (aspectRatio == null || _bitmap == null) {
       return crop;
     }
     final bool justRotated = rotation != null;
