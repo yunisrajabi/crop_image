@@ -117,6 +117,10 @@ class CropImage extends StatefulWidget {
   /// Default is const CircularProgressIndicator.adaptive()
   final Widget loadingPlaceholder;
 
+  /// An optional child widget that will be displayed on top of the crop interface.
+  /// This can be used to add custom UI elements like buttons, overlays, or controls.
+  final Widget? child;
+
   const CropImage({
     super.key,
     this.controller,
@@ -138,6 +142,7 @@ class CropImage extends StatefulWidget {
     this.alwaysMove = false,
     this.overlayPainter,
     this.loadingPlaceholder = const CircularProgressIndicator.adaptive(),
+    this.child,
   })  : gridInnerColor = gridInnerColor ?? gridColor,
         gridCornerColor = gridCornerColor ?? gridColor,
         assert(gridCornerSize > 0, 'gridCornerSize cannot be zero'),
@@ -168,6 +173,7 @@ class CropImage extends StatefulWidget {
     properties.add(DiagnosticsProperty<Color>('scrimColor', scrimColor));
     properties.add(DiagnosticsProperty<bool>('alwaysShowThirdLines', alwaysShowThirdLines));
     properties.add(DiagnosticsProperty<ValueChanged<Rect>>('onCrop', onCrop, defaultValue: null));
+    properties.add(DiagnosticsProperty<Widget>('child', child, defaultValue: null));
     properties.add(DiagnosticsProperty<double>('minimumImageSize', minimumImageSize));
     properties.add(DiagnosticsProperty<double>('maximumImageSize', maximumImageSize));
     properties.add(DiagnosticsProperty<bool>('alwaysMove', alwaysMove));
@@ -240,8 +246,8 @@ class _CropImageState extends State<CropImage> {
     if (controller.getImage() != null) {
       return controller.getImage()!.width / controller.getImage()!.height;
     }
-    // Default ratio for non-Image widgets (1:1 aspect ratio)
-    return 1.0;
+    // Default ratio for non-Image widgets
+    return maxWidth / maxHeight;
   }
 
   double _getWidth(final double maxWidth, final double maxHeight) {
@@ -334,6 +340,7 @@ class _CropImageState extends State<CropImage> {
                     ),
                   ),
                 ),
+                if (widget.child != null) widget.child!,
               ],
             );
           },
