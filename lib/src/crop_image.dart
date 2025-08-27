@@ -236,7 +236,13 @@ class _CropImageState extends State<CropImage> {
     }
   }
 
-  double _getImageRatio(final double maxWidth, final double maxHeight) => controller.getImage()!.width / controller.getImage()!.height;
+  double _getImageRatio(final double maxWidth, final double maxHeight) {
+    if (controller.getImage() != null) {
+      return controller.getImage()!.width / controller.getImage()!.height;
+    }
+    // Default ratio for non-Image widgets
+    return maxWidth / maxHeight;
+  }
 
   double _getWidth(final double maxWidth, final double maxHeight) {
     double imageRatio = _getImageRatio(maxWidth, maxHeight);
@@ -266,7 +272,7 @@ class _CropImageState extends State<CropImage> {
   Widget build(BuildContext context) => Center(
         child: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
-            if (controller.getImage() == null) {
+            if (widget.image is Image && controller.getImage() == null) {
               return widget.loadingPlaceholder;
             }
             // we remove the borders
