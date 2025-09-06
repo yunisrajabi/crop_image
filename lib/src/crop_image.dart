@@ -242,11 +242,19 @@ class _CropImageState extends State<CropImage> {
     }
   }
 
+  // double _getImageRatio(final double maxWidth, final double maxHeight) {
+  //   if (controller.getImage() != null) {
+  //     return controller.getImage()!.width / controller.getImage()!.height;
+  //   }
+  //   // Default ratio for non-Image widgets
+  //   return maxWidth / maxHeight;
+  // }
   double _getImageRatio(final double maxWidth, final double maxHeight) {
-    if (controller.getImage() != null) {
-      return controller.getImage()!.width / controller.getImage()!.height;
+    final img = controller.getImage();
+    if (img != null && img.width > 0 && img.height > 0) {
+      return img.width / img.height;
     }
-    // Default ratio for non-Image widgets
+    // وقتی تصویر هنوز لود نشده یا null هست
     return maxWidth / maxHeight;
   }
 
@@ -274,30 +282,107 @@ class _CropImageState extends State<CropImage> {
     return maxWidth / imageRatio;
   }
 
+  // @override
+  // Widget build(BuildContext context) => Center(
+  //       child: LayoutBuilder(
+  //         builder: (BuildContext context, BoxConstraints constraints) {
+  //           if (widget.image is Image && controller.getImage() == null) {
+  //             return widget.loadingPlaceholder;
+  //           }
+  //           // we remove the borders
+  //           final double maxWidth = constraints.maxWidth - 2 * widget.paddingSize;
+  //           final double maxHeight = constraints.maxHeight - 2 * widget.paddingSize;
+  //           final double width = _getWidth(maxWidth, maxHeight);
+  //           final double height = _getHeight(maxWidth, maxHeight);
+  //           size = Size(width, height);
+  //           final bool showCorners = widget.showCorners && widget.minimumImageSize != widget.maximumImageSize;
+  //           return Stack(
+  //             alignment: Alignment.center,
+  //             children: <Widget>[
+  //               SizedBox(
+  //                 width: width,
+  //                 height: height,
+  //                 child: widget.image is Image && controller.getImage() != null
+  //                     ? CustomPaint(
+  //                         painter: _RotatedImagePainter(
+  //                           controller.getImage()!,
+  //                           controller.rotation,
+  //                         ),
+  //                       )
+  //                     : ClipRect(
+  //                         child: Transform.rotate(
+  //                           angle: controller.rotation.radians,
+  //                           child: widget.image,
+  //                         ),
+  //                       ),
+  //               ),
+  //               if (widget.overlayPainter != null)
+  //                 SizedBox(
+  //                   width: width,
+  //                   height: height,
+  //                   child: CustomPaint(painter: widget.overlayPainter),
+  //                 ),
+  //               SizedBox(
+  //                 width: width + 2 * widget.paddingSize,
+  //                 height: height + 2 * widget.paddingSize,
+  //                 child: GestureDetector(
+  //                   onPanStart: onPanStart,
+  //                   onPanUpdate: onPanUpdate,
+  //                   onPanEnd: onPanEnd,
+  //                   child: CropGrid(
+  //                     crop: currentCrop,
+  //                     gridColor: widget.gridColor,
+  //                     gridInnerColor: widget.gridInnerColor,
+  //                     gridCornerColor: widget.gridCornerColor,
+  //                     paddingSize: widget.paddingSize,
+  //                     cornerSize: showCorners ? widget.gridCornerSize : 0,
+  //                     thinWidth: widget.gridThinWidth,
+  //                     thickWidth: widget.gridThickWidth,
+  //                     scrimColor: widget.scrimColor,
+  //                     showCorners: showCorners,
+  //                     alwaysShowThirdLines: widget.alwaysShowThirdLines,
+  //                     isMoving: panStart != null,
+  //                     onSize: (size) {
+  //                       this.size = size;
+  //                     },
+  //                   ),
+  //                 ),
+  //               ),
+  //               if (widget.child != null) widget.child!,
+  //             ],
+  //           );
+  //         },
+  //       ),
+  //     );
   @override
   Widget build(BuildContext context) => Center(
         child: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
-            if (widget.image is Image && controller.getImage() == null) {
+            final img = controller.getImage();
+
+            // اگر تصویر لود نشده باشه => لودینگ نشون بده
+            if (widget.image is Image && img == null) {
               return widget.loadingPlaceholder;
             }
-            // we remove the borders
+
             final double maxWidth = constraints.maxWidth - 2 * widget.paddingSize;
             final double maxHeight = constraints.maxHeight - 2 * widget.paddingSize;
             final double width = _getWidth(maxWidth, maxHeight);
             final double height = _getHeight(maxWidth, maxHeight);
             size = Size(width, height);
+
             final bool showCorners = widget.showCorners && widget.minimumImageSize != widget.maximumImageSize;
+
             return Stack(
               alignment: Alignment.center,
               children: <Widget>[
                 SizedBox(
                   width: width,
                   height: height,
-                  child: widget.image is Image && controller.getImage() != null
+                  child: (widget.image is Image && img != null)
                       ? CustomPaint(
                           painter: _RotatedImagePainter(
-                            controller.getImage()!,
+                            img,
                             controller.rotation,
                           ),
                         )
@@ -334,8 +419,8 @@ class _CropImageState extends State<CropImage> {
                       showCorners: showCorners,
                       alwaysShowThirdLines: widget.alwaysShowThirdLines,
                       isMoving: panStart != null,
-                      onSize: (size) {
-                        this.size = size;
+                      onSize: (s) {
+                        size = s;
                       },
                     ),
                   ),
